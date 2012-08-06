@@ -28,7 +28,9 @@
 #include "mathops.h"
 #include "lsp.h"
 #include "celp_math.h"
+#if HAVE_MIPSFPU // MPC-HC patch
 #include "libavcodec/mips/lsp_mips.h"
+#endif
 #include "libavutil/avassert.h"
 
 

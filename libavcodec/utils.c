@@ -301,6 +301,9 @@ void ff_init_buffer_info(AVCodecContext *s, AVFrame *frame)
         frame->pkt_duration = 0;
     }
     frame->reordered_opaque = s->reordered_opaque;
+    // ==> Start patch MPC
+    frame->reordered_opaque2= s->reordered_opaque2;
+    // ==> End patch MPC
 
     switch (s->codec->type) {
     case AVMEDIA_TYPE_VIDEO:
@@ -1847,12 +1850,16 @@ const char *avcodec_get_name(enum CodecID id)
 {
     AVCodec *codec;
 
+// ==> Start patch MPC
+/*
 #if !CONFIG_SMALL
     switch (id) {
 #include "libavcodec/codec_names.h"
     }
     av_log(NULL, AV_LOG_WARNING, "Codec 0x%x is not in the full list.\n", id);
 #endif
+*/
+// ==> End patch MPC
     codec = avcodec_find_decoder(id);
     if (codec)
         return codec->name;

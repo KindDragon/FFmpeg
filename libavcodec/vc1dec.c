@@ -5777,3 +5777,7 @@ AVCodec ff_vc1image_decoder = {
     .pix_fmts       = ff_pixfmt_list_420
 };
 #endif
+
+// ==> Start patch MPC
+#include "vc1_dxva.c"
+// ==> End patch MPC

@@ -83,6 +83,9 @@
 #include "avcodec.h"
 #include "internal.h"
 #include "get_bits.h"
+// ==> Start patch MPC
+#include "put_bits.h"
+// ==> End patch MPC
 #include "dsputil.h"
 #include "fft.h"
 #include "fmtconvert.h"
@@ -844,7 +847,9 @@ static av_cold int aac_decode_init(AVCodecContext *avctx)
 
     if (avctx->request_sample_fmt == AV_SAMPLE_FMT_FLT) {
         avctx->sample_fmt = AV_SAMPLE_FMT_FLT;
-        output_scale_factor = 1.0 / 32768.0;
+        // ==> Start patch MPC
+        output_scale_factor = 1.0; // / 32768.0;
+        // ==> End patch MPC
     } else {
         avctx->sample_fmt = AV_SAMPLE_FMT_S16;
         output_scale_factor = 1.0;
@@ -2523,8 +2528,10 @@ static int aac_decode_frame_int(AVCodecContext *avctx, void *data,
         }
 
         if (avctx->sample_fmt == AV_SAMPLE_FMT_FLT)
-            ac->fmt_conv.float_interleave((float *)ac->frame.data[0],
+            // ==> Start patch MPC
+            float_interleave((float *)ac->frame.data[0],
                                           (const float **)ac->output_data,
+            // ==> End patch MPC
                                           samples, avctx->channels);
         else
             ac->fmt_conv.float_to_int16_interleave((int16_t *)ac->frame.data[0],
@@ -2596,6 +2603,23 @@ static av_cold int aac_decode_close(AVCodecContext *avctx)
 {
     AACContext *ac = avctx->priv_data;
     int i, type;
+
+    // ==> Start patch MPC
+    if (!avctx->extradata_size && ac->oc[1].m4ac.object_type) {
+        PutBitContext pb;
+
+        avctx->extradata = av_mallocz(2);
+        avctx->extradata_size = 2;
+        init_put_bits(&pb, avctx->extradata, avctx->extradata_size);
+        put_bits(&pb, 5, ac->oc[1].m4ac.object_type);
+        put_bits(&pb, 4, ac->oc[1].m4ac.sampling_index);
+        put_bits(&pb, 4, ac->oc[1].m4ac.chan_config);
+        put_bits(&pb, 1, 0); //frame length - 1024 samples
+        put_bits(&pb, 1, 0); //does not depend on core coder
+        put_bits(&pb, 1, 0); //is not extension
+        flush_put_bits(&pb);
+    }
+    // ==> End patch MPC
 
     for (i = 0; i < MAX_ELEM_ID; i++) {
         for (type = 0; type < 4; type++) {

@@ -477,6 +477,9 @@ static int update_context_from_user(AVCodecContext *dst, AVCodecContext *src)
 
     dst->frame_number     = src->frame_number;
     dst->reordered_opaque = src->reordered_opaque;
+    // ==> Start patch MPC
+    dst->reordered_opaque2 = src->reordered_opaque2;
+    // ==> End patch MPC
     dst->thread_safe_callbacks = src->thread_safe_callbacks;
 
     if (src->slice_count && src->slice_offset) {
@@ -1088,4 +1091,19 @@ void ff_thread_free(AVCodecContext *avctx)
         frame_thread_free(avctx, avctx->thread_count);
     else
         thread_free(avctx);
+}
+
+// ffdshow custom code
+AVCodecContext* get_thread0_avctx(AVCodecContext *avctx)
+{
+    FrameThreadContext *fctx;
+    PerThreadContext *p;
+
+    if (avctx->active_thread_type&FF_THREAD_FRAME && avctx->thread_opaque){
+        fctx = avctx->thread_opaque;
+        p = &fctx->threads[0];
+        return p->avctx;
+    } else {
+        return avctx;
+    }
 }

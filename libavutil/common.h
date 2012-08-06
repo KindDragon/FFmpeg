@@ -61,6 +61,14 @@
 #define FF_ARRAY_ELEMS(a) (sizeof(a) / sizeof((a)[0]))
 #define FFALIGN(x, a) (((x)+(a)-1)&~((a)-1))
 
+// ==> Start patch MPC
+#ifdef __cplusplus
+    #ifndef UINT64_C
+        #define UINT64_C(x) (x ## ULL)
+    #endif
+#endif
+// <== End patch MPC
+
 /* misc math functions */
 extern const uint8_t ff_log2_tab[256];
 

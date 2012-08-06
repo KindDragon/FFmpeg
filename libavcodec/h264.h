@@ -596,6 +596,18 @@ typedef struct H264Context {
     uint8_t parse_history[4];
     int parse_history_count;
     int parse_last_mb;
+
+    // ==> Start patch MPC
+    int sp_for_switch_flag;
+    int slice_qs_delta;
+    int slice_qp_delta;
+    unsigned int first_mb_in_slice;
+    int bit_offset_to_slice_data;
+    int raw_slice_type;
+    int64_t outputed_rtstart;
+    void* dxva_slice_long;
+    int ref_pic_flag;
+    // <== End patch MPC
 } H264Context;
 
 extern const uint8_t ff_h264_chroma_qp[7][QP_MAX_NUM + 1]; ///< One chroma qp table for each possible bit depth (8-14).

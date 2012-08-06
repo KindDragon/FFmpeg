@@ -66,7 +66,7 @@ av_cold int ff_h263_decode_init(AVCodecContext *avctx)
     /* select sub codec */
     switch(avctx->codec->id) {
     case CODEC_ID_H263:
-    case CODEC_ID_H263P:
+//    case CODEC_ID_H263P:
         s->unrestricted_mv= 0;
         avctx->chroma_sample_location = AVCHROMA_LOC_CENTER;
         break;
@@ -112,7 +112,7 @@ av_cold int ff_h263_decode_init(AVCodecContext *avctx)
     avctx->hwaccel= ff_find_hwaccel(avctx->codec->id, avctx->pix_fmt);
 
     /* for h263, we allocate the images after having read the header */
-    if (avctx->codec->id != CODEC_ID_H263 && avctx->codec->id != CODEC_ID_H263P && avctx->codec->id != CODEC_ID_MPEG4)
+    if (avctx->codec->id != CODEC_ID_H263 /*&& avctx->codec->id != CODEC_ID_H263P*/ && avctx->codec->id != CODEC_ID_MPEG4)
         if (ff_MPV_common_init(s) < 0)
             return -1;
 
@@ -374,8 +374,8 @@ uint64_t time= rdtsc();
             next= ff_mpeg4_find_frame_end(&s->parse_context, buf, buf_size);
         }else if(CONFIG_H263_DECODER && s->codec_id==CODEC_ID_H263){
             next= ff_h263_find_frame_end(&s->parse_context, buf, buf_size);
-        }else if(CONFIG_H263P_DECODER && s->codec_id==CODEC_ID_H263P){
-            next= ff_h263_find_frame_end(&s->parse_context, buf, buf_size);
+/*        }else if(CONFIG_H263P_DECODER && s->codec_id==CODEC_ID_H263P){
+            next= ff_h263_find_frame_end(&s->parse_context, buf, buf_size);*/
         }else{
             av_log(s->avctx, AV_LOG_ERROR, "this codec does not support truncated bitstreams\n");
             return -1;
@@ -773,7 +773,7 @@ AVCodec ff_h263_decoder = {
     .long_name      = NULL_IF_CONFIG_SMALL("H.263 / H.263-1996, H.263+ / H.263-1998 / H.263 version 2"),
     .pix_fmts       = ff_hwaccel_pixfmt_list_420,
 };
-
+/*
 AVCodec ff_h263p_decoder = {
     .name           = "h263p",
     .type           = AVMEDIA_TYPE_VIDEO,
@@ -788,4 +788,4 @@ AVCodec ff_h263p_decoder = {
     .max_lowres     = 3,
     .long_name      = NULL_IF_CONFIG_SMALL("H.263 / H.263-1996, H.263+ / H.263-1998 / H.263 version 2"),
     .pix_fmts       = ff_hwaccel_pixfmt_list_420,
-};
+};*/

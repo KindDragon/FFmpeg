@@ -2446,8 +2446,10 @@ static int decode_slice_header(H264Context *h, H264Context *h0)
                     (   16*h->sps.mb_width != s->avctx->coded_width
                      || 16*h->sps.mb_height * (2 - h->sps.frame_mbs_only_flag) != s->avctx->coded_height
                      || s->avctx->bits_per_raw_sample != h->sps.bit_depth_luma
-                     || h->cur_chroma_format_idc != h->sps.chroma_format_idc
-                     || av_cmp_q(h->sps.sar, s->avctx->sample_aspect_ratio)));
+                     || h->cur_chroma_format_idc != h->sps.chroma_format_idc));
+                     // ==> Start patch MPC
+                     /*|| av_cmp_q(h->sps.sar, s->avctx->sample_aspect_ratio)))*/
+                     // ==> End patch MPC
 
     if(must_reinit && (h != h0 || (s->avctx->active_thread_type & FF_THREAD_FRAME))) {
         av_log_missing_feature(s->avctx,
@@ -2491,8 +2493,10 @@ static int decode_slice_header(H264Context *h, H264Context *h0)
             s->avctx->width  -= (2>>CHROMA444)*FFMIN(h->sps.crop_right, (8<<CHROMA444)-1);
             s->avctx->height -= (1<<s->chroma_y_shift)*FFMIN(h->sps.crop_bottom, (16>>s->chroma_y_shift)-1) * (2 - h->sps.frame_mbs_only_flag);
         }
-        s->avctx->sample_aspect_ratio = h->sps.sar;
-        av_assert0(s->avctx->sample_aspect_ratio.den);
+        // ==> Start patch MPC
+        //s->avctx->sample_aspect_ratio = h->sps.sar;
+        //av_assert0(s->avctx->sample_aspect_ratio.den);
+        // ==> End patch MPC
 
         if (s->avctx->bits_per_raw_sample != h->sps.bit_depth_luma ||
             h->cur_chroma_format_idc != h->sps.chroma_format_idc) {
@@ -2649,6 +2653,11 @@ static int decode_slice_header(H264Context *h, H264Context *h0)
                 }
         }
     }
+
+    // ==> Start patch MPC
+    s->avctx->sample_aspect_ratio= h->sps.sar;
+    av_assert0(s->avctx->sample_aspect_ratio.den);
+    // ==> End patch MPC
 
     if (h == h0 && h->dequant_coeff_pps != pps_id) {
         h->dequant_coeff_pps = pps_id;
@@ -2836,7 +2845,9 @@ static int decode_slice_header(H264Context *h, H264Context *h0)
             }
         } else {
             /* Frame or first field in a potentially complementary pair */
-            assert(!s0->current_picture_ptr);
+            // ==> Start patch MPC
+            // assert(!s0->current_picture_ptr);
+            // ==> End patch MPC
             s0->first_field = FIELD_PICTURE;
         }
 
@@ -4135,6 +4146,16 @@ not_extra:
     ff_print_debug_info(s, pict);
     // printf("out %d\n", (int)pict->data[0]);
 
+    /* ffdshow custom code (begin) */
+    pict->h264_poc_decoded = h->poc_lsb + h->poc_msb;
+    if (h->next_output_pic)
+        pict->h264_poc_outputed = h->next_output_pic->poc;
+    else
+        pict->h264_poc_outputed = INT_MIN;
+    pict->h264_frame_num_decoded = h-> frame_num;
+    pict->h264_max_frame_num = 1 << h->sps.log2_max_frame_num;
+    /* ffdshow custom code (end) */
+
     return get_consumed_bytes(s, buf_index, buf_size);
 }
 
@@ -4240,3 +4261,8 @@ AVCodec ff_h264_vdpau_decoder = {
     .priv_class     = &h264_vdpau_class,
 };
 #endif
+
+// ==> Start patch MPC
+#include "h264_recov.c"
+#include "h264_dxva.c"
+// ==> End patch MPC
